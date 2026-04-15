@@ -7,14 +7,15 @@ from discord.ui import Button, View
 from flask import Flask
 from threading import Thread
 
-# --- WEB SERVER FOR UPTIMEROBOT ---
+# --- WEB SERVER FOR UPTIMEROBOT (FIXED) ---
 app = Flask('')
 
 @app.route('/')
 def home():
-    return "Bot is alive!"
+    return "Bot is alive and running!"
 
 def run():
+    # Replit hamesha 8080 port ko prefer karta hai
     app.run(host='0.0.0.0', port=8080)
 
 def keep_alive():
@@ -28,10 +29,9 @@ intents.voice_states = True
 
 bot = commands.Bot(command_prefix="-", intents=intents)
 
-# YTDL Options optimized for streaming
+# Streaming options optimize kiye hain taaki gaana ruke nahi
 ytdl_format_options = {
     'format': 'bestaudio/best',
-    'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
     'restrictfilenames': True,
     'noplaylist': True,
     'nocheckcertificate': True,
@@ -75,8 +75,9 @@ class MusicControls(View):
 
     @discord.ui.button(label="⏹", style=discord.ButtonStyle.danger)
     async def stop(self, interaction: discord.Interaction, button: Button):
-        await self.vc.disconnect()
-        await interaction.response.send_message("⏹ Stopped", ephemeral=True)
+        if self.vc:
+            await self.vc.disconnect()
+            await interaction.response.send_message("⏹ Stopped", ephemeral=True)
 
 @bot.command()
 async def join(ctx):
@@ -86,7 +87,7 @@ async def join(ctx):
         await ctx.author.voice.channel.connect()
         await ctx.send("✅ Joined voice channel")
     else:
-        await ctx.send("❌ Voice channel join karo")
+        await ctx.send("❌ Pehle voice channel join karo")
 
 @bot.command()
 async def leave(ctx):
@@ -113,7 +114,6 @@ async def play(ctx, *, query):
             title = info['title']
             thumbnail = info.get("thumbnail")
             
-            # Use FFmpeg with streaming options
             source = discord.FFmpegPCMAudio(url, **ffmpeg_options)
             
             if vc.is_playing():
@@ -131,10 +131,11 @@ async def play(ctx, *, query):
 async def on_ready():
     print(f"🔥 Bot Online: {bot.user}")
 
-# --- START BOT ---
-keep_alive() # Server starts here
-token = os.getenv("DISCORD_TOKEN")
-if token:
-    bot.run(token)
-else:
-    print("❌ TOKEN NOT FOUND IN SECRETS!")
+# --- BOT EXECUTION ---
+if __name__ == "__main__":
+    keep_alive() # Web server starts
+    token = os.getenv("DISCORD_TOKEN")
+    if token:
+        bot.run(token)
+    else:
+        print("❌ TOKEN NOT FOUND IN REPLIT SECRETS!")
